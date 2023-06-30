@@ -54,28 +54,54 @@ class NativeSsePlugin: FlutterPlugin, MethodCallHandler, StreamHandler {
     if (eventsSink != null) {
       eventsSink?.error("000", "Có listen mới", "")
     }
-    println("Start onListen")
+    println("Start onListen ${arguments?.javaClass}")
     eventsSink = events;
+
+    var arg : Map<String, String> = arguments as Map<String, String>
+
     CoroutineScope(Dispatchers.IO).launch {
-      conn =  (URL(arguments as String).openConnection() as HttpURLConnection).also {
-        it.setRequestProperty("Accept", "text/event-stream")
-        it.doInput = true
-      }
-      conn?.connect()
-      val inputReader = conn?.inputStream?.bufferedReader()
-      while (true) {
-        val data = inputReader?.readLine();
-        if (eventsSink != null) {
-          CoroutineScope(Dispatchers.Main).launch {
-            eventsSink?.success(data)
+      try {
+        conn =  (URL(arg["url"] as String).openConnection() as HttpURLConnection).also {
+          it.setRequestProperty("Accept", "text/event-stream")
+          arg.keys.forEach {
+            s ->
+            run {
+              if (s != "url") {
+                it.setRequestProperty(s, arg[s])
+              }
+            }
+          }
+          it.doInput = true
+        }
+        conn?.connect()
+        val inputReader = conn?.inputStream?.bufferedReader()
+        while (true) {
+
+          val data = inputReader?.readLine();
+          if (eventsSink != null) {
+            CoroutineScope(Dispatchers.Main).launch {
+              eventsSink?.success(data)
+            }
           }
         }
+      } catch (error : Exception) {
+        if (eventsSink != null) {
+          CoroutineScope(Dispatchers.Main).launch {
+            eventsSink?.error("Error When Listen", error.message, error)
+          }
+        }
+
+
       }
     }
   }
 
   override fun onCancel(arguments: Any?) {
     eventsSink = null
-    conn?.disconnect()
+    try {
+      conn?.disconnect()
+    } catch (error : Exception) {
+
+    }
   }
 }

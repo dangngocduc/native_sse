@@ -27,7 +27,7 @@ abstract class NativeSsePlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Stream<dynamic> startListenSSE(String url) {
+  Stream<dynamic> startListenSSE(String url, Map<String, String> headers) {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

@@ -12,7 +12,8 @@ class NativeSse {
     return NativeSsePlatform.instance.getPlatformVersion();
   }
 
-  Stream startListenSSE(String url) {
-    return NativeSsePlatform.instance.startListenSSE(url);
+  Stream startListenSSE(
+      {required String url, required Map<String, String> headers}) {
+    return NativeSsePlatform.instance.startListenSSE(url, headers);
   }
 }

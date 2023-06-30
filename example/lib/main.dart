@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/services.dart';
+import 'package:flutter_client_sse/flutter_client_sse.dart';
 import 'package:native_sse/native_sse.dart';
 
 void main() {
@@ -17,7 +18,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  String data = '';
   final _nativeSsePlugin = NativeSse();
 
   @override
@@ -28,30 +29,24 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    String platformVersion = '';
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      _nativeSsePlugin
-          .startListenSSE(
-              'https://daugiabiensooto.com.vn/web-api/bidding/v1/bidding-timeout-stream')
-          .listen((event) {
-        developer.log('event: $event', name: 'Main');
-      }, onError: (error) {
-        developer.log('error: $error', name: 'Main');
-      });
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
+    _nativeSsePlugin.startListenSSE(
+      url: '',
+      headers: {
+        'Authorization':
+            'Bearer .eyJzdWIiOiIwMzAwOTgwMDA2NzIiLCJpc3MiOiJHVEVMIiwiZXhwIjoxNjg4OTQ5MjkxLCJyb2xlcyI6IlJPTEVfQVBQUk9WRUQiLCJ1c2VySWQiOiI0MjY4OTUyMTMxMjQ4In0.H4dMdDgslyuXShmwDqzNLwLEPNqZs7azf7aiTPOUoDM',
+      },
+    ).listen((event) {
+      developer.log('event: $event', name: 'Main');
+      if (event != null && event.toString().isNotEmpty == true) {
+        setState(() {
+          data = '${data}\n{$event}';
+        });
+      }
+    }, onError: (error) {
+      developer.log('error: $error', name: 'Main');
     });
+
+    if (!mounted) return;
   }
 
   @override
@@ -62,7 +57,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: Text('Running on: $data'),
         ),
       ),
     );

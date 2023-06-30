@@ -19,7 +19,10 @@ class MethodChannelNativeSse extends NativeSsePlatform {
   }
 
   @override
-  Stream<dynamic> startListenSSE(String url) {
-    return eventChannel.receiveBroadcastStream(url);
+  Stream<dynamic> startListenSSE(String url, Map<String, String> headers) {
+    return eventChannel.receiveBroadcastStream({
+      'url': url,
+      ...headers,
+    });
   }
 }

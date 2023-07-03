@@ -41,8 +41,10 @@ class InternalStreamHandler : EventChannel.StreamHandler {
                     if (eventsSink != null) {
                         try {
                             val data = inputReader?.readLine();
-                            CoroutineScope(Dispatchers.Main).launch {
-                                eventsSink?.success(data)
+                            if (data != null && data.trim().isNotEmpty()) {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    eventsSink?.success(data)
+                                }
                             }
                         } catch (error : Exception) {
                             println("error" + error)

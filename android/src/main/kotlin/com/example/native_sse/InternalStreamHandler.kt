@@ -56,6 +56,7 @@ class InternalStreamHandler : EventChannel.StreamHandler {
     }
 
     override fun onCancel(arguments: Any?) {
+        println("onCancel .....")
         eventsSink = null
         try {
             conn?.disconnect()

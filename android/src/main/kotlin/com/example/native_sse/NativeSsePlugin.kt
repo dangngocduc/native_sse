@@ -18,15 +18,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /** NativeSsePlugin */
-class NativeSsePlugin: FlutterPlugin, MethodCallHandler, StreamHandler {
+class NativeSsePlugin: FlutterPlugin, MethodCallHandler {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private lateinit var channel : MethodChannel
   private lateinit var eventChannel : EventChannel
-  private  var eventsSink : EventChannel.EventSink? = null
-  private  var conn : HttpURLConnection? = null
+  private lateinit var eventChannel2 : EventChannel
+  private lateinit var eventChannel3 : EventChannel
+  private lateinit var eventChannel4 : EventChannel
 
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -34,7 +35,16 @@ class NativeSsePlugin: FlutterPlugin, MethodCallHandler, StreamHandler {
     channel.setMethodCallHandler(this)
 
     eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "native_sse_event")
-    eventChannel.setStreamHandler(this);
+    eventChannel.setStreamHandler(InternalStreamHandler());
+
+    eventChannel2 = EventChannel(flutterPluginBinding.binaryMessenger, "native_sse_event/link2")
+    eventChannel2.setStreamHandler(InternalStreamHandler());
+
+    eventChannel3 = EventChannel(flutterPluginBinding.binaryMessenger, "native_sse_event/link3")
+    eventChannel3.setStreamHandler(InternalStreamHandler());
+
+    eventChannel4 = EventChannel(flutterPluginBinding.binaryMessenger, "native_sse_event/link4")
+    eventChannel4.setStreamHandler(InternalStreamHandler());
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -50,58 +60,4 @@ class NativeSsePlugin: FlutterPlugin, MethodCallHandler, StreamHandler {
     channel.setMethodCallHandler(null)
   }
 
-  override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-    if (eventsSink != null) {
-      eventsSink?.error("000", "Có listen mới", "")
-    }
-    println("Start onListen ${arguments?.javaClass}")
-    eventsSink = events;
-
-    var arg : Map<String, String> = arguments as Map<String, String>
-
-    CoroutineScope(Dispatchers.IO).launch {
-      try {
-        conn =  (URL(arg["url"] as String).openConnection() as HttpURLConnection).also {
-          it.setRequestProperty("Accept", "text/event-stream")
-          arg.keys.forEach {
-            s ->
-            run {
-              if (s != "url") {
-                it.setRequestProperty(s, arg[s])
-              }
-            }
-          }
-          it.doInput = true
-        }
-        conn?.connect()
-        val inputReader = conn?.inputStream?.bufferedReader()
-        while (true) {
-
-          val data = inputReader?.readLine();
-          if (eventsSink != null) {
-            CoroutineScope(Dispatchers.Main).launch {
-              eventsSink?.success(data)
-            }
-          }
-        }
-      } catch (error : Exception) {
-        if (eventsSink != null) {
-          CoroutineScope(Dispatchers.Main).launch {
-            eventsSink?.error("Error When Listen", error.message, error)
-          }
-        }
-
-
-      }
-    }
-  }
-
-  override fun onCancel(arguments: Any?) {
-    eventsSink = null
-    try {
-      conn?.disconnect()
-    } catch (error : Exception) {
-
-    }
-  }
 }

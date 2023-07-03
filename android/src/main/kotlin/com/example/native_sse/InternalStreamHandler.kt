@@ -39,9 +39,13 @@ class InternalStreamHandler : EventChannel.StreamHandler {
                 val inputReader = conn?.inputStream?.bufferedReader()
                 while (true) {
                     if (eventsSink != null) {
-                        val data = inputReader?.readLine();
-                        CoroutineScope(Dispatchers.Main).launch {
-                            eventsSink?.success(data)
+                        try {
+                            val data = inputReader?.readLine();
+                            CoroutineScope(Dispatchers.Main).launch {
+                                eventsSink?.success(data)
+                            }
+                        } catch (error : Exception) {
+                            println("error" + error)
                         }
                     }
                 }

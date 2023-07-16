@@ -37,7 +37,8 @@ class InternalStreamHandler : EventChannel.StreamHandler {
                 }
                 conn?.connect()
                 val inputReader = conn?.inputStream?.bufferedReader()
-                while (true) {
+                var isConnecting = true
+                while (isConnecting) {
                     if (eventsSink != null) {
                         try {
                             val data = inputReader?.readLine();
@@ -47,7 +48,8 @@ class InternalStreamHandler : EventChannel.StreamHandler {
                                 }
                             }
                         } catch (error : Exception) {
-                            println("error" + error)
+                            println("error: " + error)
+                            isConnecting = false
                         }
                     }
                 }
@@ -66,6 +68,7 @@ class InternalStreamHandler : EventChannel.StreamHandler {
         eventsSink = null
         try {
             conn?.disconnect()
+            conn = null
         } catch (error : Exception) {
 
         }
